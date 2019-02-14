@@ -7,9 +7,6 @@ LOGS=/tmp
 OPTS=-Djasypt.encryptor.password=test123
 $JAVA_HOME -jar $OPTS $JARS/auth-server-0.0.1-SNAPSHOT.jar > $LOGS/auth-server.log &
 $JAVA_HOME -jar $OPTS $JARS/resource-server-0.0.1-SNAPSHOT.jar > $LOGS/resource-server.log &
-$JAVA_HOME -jar $OPTS $JARS/reporteador-server-0.0.1-SNAPSHOT.jar > $LOGS/reporteador-server.log &
-$JAVA_HOME -jar $OPTS $JARS/reporteador-financiero-0.0.1-SNAPSHOT.jar > $LOGS/reporteador-financiero.log &
-
 
 /usr/lib/systemd/system/dh-reports.service
 
