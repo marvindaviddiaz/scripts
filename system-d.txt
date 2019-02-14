@@ -1,0 +1,33 @@
+/usr/bin/dh-reports.sh
+
+#!/bin/bash
+JAVA_HOME=/TOOLS/java/jdk1.8.0_91/jre/bin/java
+JARS=/opt/applications/dh-reports
+LOGS=/tmp
+OPTS=-Djasypt.encryptor.password=test123
+$JAVA_HOME -jar $OPTS $JARS/auth-server-0.0.1-SNAPSHOT.jar > $LOGS/auth-server.log &
+$JAVA_HOME -jar $OPTS $JARS/resource-server-0.0.1-SNAPSHOT.jar > $LOGS/resource-server.log &
+$JAVA_HOME -jar $OPTS $JARS/reporteador-server-0.0.1-SNAPSHOT.jar > $LOGS/reporteador-server.log &
+$JAVA_HOME -jar $OPTS $JARS/reporteador-financiero-0.0.1-SNAPSHOT.jar > $LOGS/reporteador-financiero.log &
+
+
+/usr/lib/systemd/system/dh-reports.service
+
+[Unit]
+Description=DH Reports
+
+[Service]
+Type=forking
+ExecStart=/bin/bash /usr/bin/dh-reports.sh
+
+[Install]
+WantedBy=multi-user.target
+
+
+-------------------------
+sudo systemctl daemon-reload
+-------------------------
+sudo systemctl start dh-reports
+sudo systemctl status dh-reports
+sudo systemctl stop dh-reports
+
