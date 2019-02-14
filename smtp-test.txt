@@ -1,0 +1,29 @@
+marvin@diaz-hp:TOOLS$ telnet localhost 2525
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+220 diaz-hp ESMTP SubEthaSMTP null
+HELO localhost
+250 diaz-hp
+MAIL FROM: <yo@midominio.com>
+250 Ok
+RCPT TO: <destinatario@sudominio.com>
+250 Ok
+DATA
+354 End data with <CR><LF>.<CR><LF>
+Subject: Campo de asunto
+From: yo@midominio.com
+To: destinatario@sudominio.com
+
+Hola,
+Esto es una prueba, Hata luego
+
+.
+250 Ok
+quit
+221 Bye
+Connection closed by foreign host.
+marvin@diaz-hp:TOOLS$
+
+
+https://es.wikipedia.org/wiki/Protocolo_para_transferencia_simple_de_correo
