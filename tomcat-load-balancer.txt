@@ -1,0 +1,95 @@
+sudo echo 1 > sudo /proc/sys/net/ipv6/conf/all/disable_ipv6
+
+nano /etc/selinux/config
+
+    SELINUX=disabled
+
+-- ## yum install /btf/instaladores/apache2-mod_jk-1.2.37-4.1.x86_64.rpm
+
+Instalar:
+    yum install httpd
+    yum install httpd-tools
+    yum install apr-devel
+    yum install apr-util-devel
+    yum install apr-util-devel
+    yum install cyrus-sasl-devel
+    yum install expat-devel
+    yum install httpd-devel
+    yum install libdb-devel
+    yum install openldap-devel
+    yum install mod_ssl
+    sudo yum install gcc
+
+Descargar http://www.eu.apache.org/dist/tomcat/tomcat-connectors/jk/tomcat-connectors-1.2.41-src.tar.gz
+tar -xxvf tomcat-connectors-1.2.41-src.tar.gz
+cd tomcat-connectors-1.2.41-src/native/
+sudo ./configure --with-apxs=/usr/bin/apxs
+sudo make && sudo make install
+
+nano /etc/httpd/conf.d/mod-jk.conf
+
+        LoadModule jk_module modules/mod_jk.so
+        JkWorkersFile conf.d/workers.properties
+        JkLogFile logs/mod_jk.log
+        JkLogLevel debug
+        JkLogStampFormat "[%a %b %d %H:%M:%S %Y]"
+        JkOptions +ForwardKeySize +ForwardURICompat -ForwardDirectories
+        JkRequestLogFormat "%w %V %T"
+
+        # CONFIGURACION PARA SSL
+
+        #JkExtractSSL On
+        #JkHTTPSIndicator HTTPS
+        #JkSESSIONIndicator SSL_SESSION_ID
+        #JkCIPHERIndicator SSL_CIPHER
+        #JkCERTSIndicator SSL_CLIENT_CERT
+
+        JkMount /* loadbalancer
+        JkShmFile logs/jk.shm
+
+nano /etc/httpd/conf.d/workers.properties
+
+        worker.list=loadbalancer
+
+        worker.instancia-plataforma-01.port=8009
+        worker.instancia-plataforma-01.host=172.31.4.136
+        worker.instancia-plataforma-01.type=ajp13
+        worker.instancia-plataforma-01.ping_mode=A
+        worker.instancia-plataforma-01.lbfactor=1
+
+        worker.instancia-plataforma-02.port=8009
+        worker.instancia-plataforma-02.host=172.31.4.137
+        worker.instancia-plataforma-02.type=ajp13
+        worker.instancia-plataforma-02.ping_mode=A
+        worker.instancia-plataforma-02.lbfactor=1
+
+        worker.loadbalancer.type=lb
+        worker.loadbalancer.balance_workers=instancia-plataforma-01,instancia-plataforma-02
+        worker.loadbalancer.sticky_session=true
+
+
+iptables -I INPUT 7 -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT
+iptables -I INPUT 7 -p tcp -m state --state NEW -m tcp --dport 8009 -j ACCEPT
+
+iptables-save
+
+nano /btf/TOOLS/tomcat/apache-tomcat-8.5.5/conf/server.xml
+
+    DESCOMENTAR
+
+    <Engine name="Catalina" defaultHost="localhost" jvmRoute="instancia-plataforma-01">
+
+
+http://blog.c2b2.co.uk/2014/04/how-to-set-up-cluster-with-tomcat-8.html
+
+
+
+Forma para no reiniciar con SELinux
+
+ /usr/sbin/setsebool httpd_can_network_connect 1
+
+ /usr/sbin/setsebool -P httpd_can_network_connect 1
+
+
+http://sysadminsjourney.com/content/2010/02/01/apache-modproxy-error-13permission-denied-error-rhel/
+
