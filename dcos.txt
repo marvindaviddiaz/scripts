@@ -1,0 +1,91 @@
+################################# DCOS INSTALATION ##################### 
+
+https://dzone.com/articles/installing-apache-mesos-160-on-ubuntu-1804
+
+wget https://www-us.apache.org/dist/mesos/1.7.0/mesos-1.7.0.tar.gz
+tar -zxf mesos-1.7.0.tar.gz mesos-1.7.0/
+sudo apt -y install build-essential python-dev libcurl4-nss-dev libsasl2-dev libsasl2-modules libapr1-dev libsvn-dev zlib1g-dev libssl-dev
+mkdir build
+cd build/
+../configure 
+make -j 2 V=0
+sudo make install
+ldconfig
+sudo cp /TOOLS/mesos/mesos-1.7.0/build/src/.libs/libmesos.so /usr/lib/
+
+curl -O http://downloads.mesosphere.com/marathon/v1.5.1/marathon-1.5.1.tgz
+tar xzf marathon-1.5.1.tgz
+
+
+wget https://www-eu.apache.org/dist/zookeeper/zookeeper-3.4.12/zookeeper-3.4.12.tar.gz
+tar -xzvf zookeeper-3.4.12.tar.gz
+cp zookeeper-3.4.12/conf/zoo_sample.cfg zookeeper-3.4.12/conf/zoo.cfg
+zookeeper-3.4.12/bin/zkServer.sh start
+
+################################# RUN ################################## 
+
+
+/TOOLS/zookeeper/zookeeper-3.4.12/bin/zkServer.sh start
+/TOOLS/mesos/mesos-1.7.0/build/bin/mesos-master.sh --ip=127.0.0.1 --work_dir=/TOOLS/mesos/mesos-1.7.0/build/mesos-server
+/TOOLS/marathon/marathon-1.5.0-96-gf84298d/bin/marathon  --master  localhost:5050
+systemctl start mesos_executors.slice
+sudo /TOOLS/mesos/mesos-1.7.0/build/bin/mesos-agent.sh --master=127.0.0.1:5050 --containerizers=mesos,docker --work_dir=/TOOLS/mesos/mesos-1.7.0/build/mesos-agent --resources='ports:[0,32000]'
+docker run -e PORTS=9090 --net=host mesosphere/marathon-lb sse --marathon http://localhost:8080 --group external --skip-validation
+
+################################# DCOS ################################# 
+
+	"HAPROXY_VHOST": "addon-batch"
+
+{
+  "id": "addon-batch",
+  "labels": {
+    "HAPROXY_BACKEND_WEIGHT": "1",
+    "HAPROXY_MODE": "http",
+    "HAPROXY_BALANCE": "roundrobin",
+    "HAPROXY_GROUP": "external",
+    "HAPROXY_BACKEND_STICKY_OPTIONS" : "cookie nginx_using_marathon_lb insert indirect nocache"
+  },
+  "container": {
+      "type": "DOCKER",
+      "docker": {
+          "image": "is4tech/addon-batch",
+          "network": "BRIDGE",
+          "portMappings": [
+              {
+          		"containerPort": 8004,
+          		"hostPort": 0,
+          		"servicePort": 10000,
+          		"protocol": "tcp",
+          		"labels": {}
+			  }
+            ]
+      }
+  },
+  "cpus": 1,
+  "mem": 100,
+  "instances": 2,
+  "env": {
+    "JAVA_OPTS": "-Dspring.datasource.url=jdbc:mysql://192.168.1.183:3306/fel?createDatabaseIfNotExist=true"
+  },
+  "portDefinitions": [
+    {
+      "port": 0,
+      "protocol": "tcp",
+      "labels": {}
+    }
+]
+}
+
+###########################
+
+MARATON 				=> 	http://localhost:8080/ui/#/apps
+MESOS   				=>  http://localhost:5050/
+MARATON LB (HAPROXY)    =>  http://localhost:9090/haproxy?stats
+BALANCED MS 			=>  http://localhost:10000/actuator/health
+
+https://github.com/mesosphere/marathon-lb
+https://maauso.com/category/entrada/usar-marathon-lb-apache-mesos/
+
+sudo netstat -plnt
+
+###########################
